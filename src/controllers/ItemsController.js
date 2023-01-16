@@ -17,30 +17,48 @@ class ItemController {
 
     return response.json(item);
   }
-
-  async getAllEnergyConsumption(request, response) {
+  async moreConsumed(request, response) {
     const { id } = request.params;
+
+    const item = await knex("items").where({ id }).first();
+
+    return response.json(item);
+  }
+
+  async dashboard(request, response) {
+    const { id } = request.params;
+
+    let itemsArr = [];
+
+    const TE2022 = 0.27;
+    const TUSD2022 = 0.4;
+    let lastEnergyPay = 0;
+
     let kwhTotal = 0;
     let baseCalculo = 0;
     let wattsLampada = 9;
     let hoursLampada = 6;
-    let imposto = 0;
+
+    let photo = "";
+    let auxItem = 0;
+    let itemName = "";
 
     const item = await knex("questions")
       .select(
         "questions.*",
         "items.default_watts",
         "items.flag_residents",
+        "items.name as item_name",
+        "items.photo",
+        "items.id as item_id",
         "users.comforts",
-        "users.residents"
+        "users.residents",
+        "users.energy_bill"
       )
       .where({ user_id: id })
       .leftJoin("items", "items.id", "=", "questions.item_id")
       .leftJoin("users", "users.id", "=", "questions.user_id");
 
-    /* 
-      potencia x horas x dias / 1000
-      */
     item.forEach((element) => {
       let hours = (element.minutes + element.hours * 60) / 60;
       let days = element.dayByMonth || element.dayByWeek * 4;
@@ -54,18 +72,77 @@ class ItemController {
       let comodos = element.comforts;
       let flag = element.flag_residents;
 
+      if (quantItem <= 0) {
+        quantItem = 0;
+      } else {
+        if (moradores === 1 && quantItem >= 1) {
+          quantItem = moradores;
+        }
+        if (moradores > 1 && quantItem >= 1) {
+          if (flag === 1) {
+            if (quantItem === 1) {
+              quantItem = moradores * quantItem;
+            } else {
+              quantItem = moradores;
+            }
+          } else {
+            quantItem = quantItem;
+            if (quantItem > 1 && moradores > quantItem) {
+              quantItem = quantItem;
+            }
+            if (moradores <= quantItem) {
+              quantItem = moradores;
+            }
+          }
+        }
+      }
+
+      lastEnergyPay = element.energy_bill || 172;
+
       baseCalculo = (comodos * wattsLampada * hoursLampada) / 1000;
       let kwhItemMonth = (quantItem * watts * days * hours) / 1000;
 
       kwhTotal += parseFloat(kwhItemMonth.toFixed(2));
-      // console.log(kwhTotal, parseFloat(kwhItemMonth.toFixed(2)));
+
+      itemsArr.push({
+        itemid: element.item_id,
+        itemName: element.item_name,
+        itemWattsMonth: parseFloat(kwhItemMonth.toFixed(2)),
+        userId: element.user_id,
+      });
+
+      auxItem = kwhItemMonth < auxItem ? auxItem : kwhItemMonth;
+      if (auxItem === kwhItemMonth) {
+        photo = element.photo;
+        itemName = element.item_name;
+      }
     });
 
-    imposto = parseFloat(kwhTotal.toFixed(2)) * 0.2;
-    console.log(imposto);
+    kwhTotal = parseFloat(kwhTotal.toFixed(2));
+
+    const imposto = kwhTotal * 0.2;
+
+    kwhTotal = kwhTotal + imposto + baseCalculo;
+
+    const itemPercentageOfTotal = (auxItem * 100) / kwhTotal;
+    const gastoEsperado = kwhTotal * TE2022 + kwhTotal * TUSD2022;
+    const newItemsArr = itemsArr.map((element) => {
+      element.percentage = Math.round(
+        (element.itemWattsMonth * 100) / kwhTotal
+      );
+      return element;
+    });
 
     return response.json({
-      totalKwhMes: parseFloat(kwhTotal.toFixed(2)),
+      total: Math.round(kwhTotal),
+      comparePercentage: Math.round(lastEnergyPay / (TE2022 + TUSD2022)),
+      itemPhoto: photo,
+      itemName: itemName,
+      itemPercentageOfTotal: Math.round(itemPercentageOfTotal),
+      economized: lastEnergyPay > Number(gastoEsperado.toFixed(2)),
+      valorEsperado: Number(gastoEsperado.toFixed(2)),
+      valorUltimaConta: lastEnergyPay,
+      itens: newItemsArr,
     });
   }
 }

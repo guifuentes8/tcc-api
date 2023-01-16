@@ -60,7 +60,6 @@ class QuestionsController {
   }
 
   async updateUser(request, response) {
-    console.log(request.body);
     const { userId, questions } = request.body;
 
     await knex("users").where({ id: userId }).update(questions);

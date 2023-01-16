@@ -8,9 +8,6 @@ const itemsController = new ItemsController();
 
 itemsRoutes.get("/", itemsController.allItem);
 itemsRoutes.get("/:id", itemsController.itemById);
-itemsRoutes.get(
-  "/getAllEnergyConsumption/:id",
-  itemsController.getAllEnergyConsumption
-);
+itemsRoutes.get("/dashboard/:id", itemsController.dashboard);
 
 module.exports = itemsRoutes;
