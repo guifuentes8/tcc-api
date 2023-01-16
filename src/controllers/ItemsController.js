@@ -105,7 +105,7 @@ class ItemController {
       kwhTotal += parseFloat(kwhItemMonth.toFixed(2));
 
       itemsArr.push({
-        itemid: element.item_id,
+        itemId: element.item_id,
         itemName: element.item_name,
         itemWattsMonth: parseFloat(kwhItemMonth.toFixed(2)),
         userId: element.user_id,
