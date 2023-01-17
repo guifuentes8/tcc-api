@@ -4,7 +4,7 @@ const dayjs = require("dayjs");
 
 class QuestionsController {
   async index(request, response) {
-    const { id } = request.params;
+    const { id, userId } = request.params;
 
     const selectItem = await knex("items")
       .select("items.*", "category.name as cat_name")
@@ -16,7 +16,8 @@ class QuestionsController {
       .where("questions.item_id", id)
       .leftJoin("items", "items.id", "=", "questions.item_id")
       .leftJoin("category", "items.category_id", "=", "category.id")
-      .leftJoin("users", "users.id", "=", "questions.user_id");
+      .leftJoin("users", "users.id", "=", "questions.user_id")
+      .where("questions.user_id", userId);
 
     if (selectQuestion.length > 0) return response.json(selectQuestion);
 
@@ -25,6 +26,8 @@ class QuestionsController {
 
   async create(request, response) {
     const { userId, questions } = request.body;
+
+    console.log(questions);
 
     await knex("questions").insert(questions);
 
@@ -45,8 +48,8 @@ class QuestionsController {
 
     if (selectQuestion.length > 0) {
       await knex("questions")
-        .where("user_id", userId)
-        .where("item_id", itemId)
+        .where("questions.user_id", userId)
+        .where("questions.item_id", itemId)
         .update(question);
     } else {
       await knex("questions").insert(question);

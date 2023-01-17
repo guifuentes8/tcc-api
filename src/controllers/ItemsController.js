@@ -120,12 +120,12 @@ class ItemController {
 
     kwhTotal = parseFloat(kwhTotal.toFixed(2));
 
+    kwhTotal = kwhTotal + baseCalculo;
+
     const imposto = kwhTotal * 0.2;
-
-    kwhTotal = kwhTotal + imposto + baseCalculo;
-
     const itemPercentageOfTotal = (auxItem * 100) / kwhTotal;
-    const gastoEsperado = kwhTotal * TE2022 + kwhTotal * TUSD2022;
+    const gastoEsperado =
+      (kwhTotal + imposto) * TE2022 + (kwhTotal + imposto) * TUSD2022;
     const newItemsArr = itemsArr.map((element) => {
       element.percentage = (element.itemWattsMonth * 100) / kwhTotal;
       element.percentage = Number(element.percentage.toFixed(2));
