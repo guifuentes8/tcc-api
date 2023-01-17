@@ -127,9 +127,8 @@ class ItemController {
     const itemPercentageOfTotal = (auxItem * 100) / kwhTotal;
     const gastoEsperado = kwhTotal * TE2022 + kwhTotal * TUSD2022;
     const newItemsArr = itemsArr.map((element) => {
-      element.percentage = Math.round(
-        (element.itemWattsMonth * 100) / kwhTotal
-      );
+      element.percentage = (element.itemWattsMonth * 100) / kwhTotal;
+      element.percentage = Number(element.percentage.toFixed(2));
       return element;
     });
 

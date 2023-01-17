@@ -7,7 +7,7 @@ class CategoryController {
     const category = await knex("category").select("id", "name").orderBy("id");
     const items = await knex("items").orderBy("id");
 
-    const teste = category.map((cat) => {
+    const categoryIndex = category.map((cat) => {
       return {
         title: cat.name,
         data: items.filter((item) => {
@@ -18,9 +18,7 @@ class CategoryController {
       };
     });
 
-    console.log(teste);
-
-    return response.json(teste);
+    return response.json(categoryIndex);
   }
 
   async create(request, response) {
