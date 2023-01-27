@@ -27,8 +27,6 @@ class QuestionsController {
   async create(request, response) {
     const { userId, questions } = request.body;
 
-    console.log(questions);
-
     await knex("questions").insert(questions);
 
     await knex("users")

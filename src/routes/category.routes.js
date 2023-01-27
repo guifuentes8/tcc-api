@@ -10,6 +10,11 @@ const categoryController = new CategoryController();
 // categoryRoutes.use(ensureAuthenticated);
 
 categoryRoutes.get("/", categoryController.index);
+categoryRoutes.get("/all", categoryController.all);
+categoryRoutes.get(
+  "/itemByCategory/:id/:userId",
+  categoryController.itemByCategory
+);
 categoryRoutes.post("/", categoryController.create);
 
 module.exports = categoryRoutes;

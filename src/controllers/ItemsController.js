@@ -33,7 +33,7 @@ class ItemController {
     const TE2022 = 0.27;
     const TUSD2022 = 0.4;
     let lastEnergyPay = 0;
-
+    let totalHours = 0;
     let kwhTotal = 0;
     let baseCalculo = 0;
     let wattsLampada = 9;
@@ -99,6 +99,7 @@ class ItemController {
 
       lastEnergyPay = element.energy_bill || 172;
 
+      totalHours += quantItem * days * hours;
       baseCalculo = (comodos * wattsLampada * hoursLampada) / 1000;
       let kwhItemMonth = (quantItem * watts * days * hours) / 1000;
 
@@ -142,6 +143,7 @@ class ItemController {
       valorEsperado: Number(gastoEsperado.toFixed(2)),
       valorUltimaConta: lastEnergyPay,
       itens: newItemsArr,
+      totalHours: totalHours,
     });
   }
 }
