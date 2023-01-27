@@ -117,7 +117,7 @@ class CategoryController {
         }
       } else {
         itemMoreConsumedName = item[index].item_name;
-        itemMoreConsumedKwh = item[index].totalKwh;
+        itemMoreConsumedKwh = item[index].totalKwh ? item[index].totalKwh : 0;
       }
 
       itemsArr.push({
@@ -135,9 +135,10 @@ class CategoryController {
       itensOfCategory: itemsArr,
       totalItensKwhByCategory: Math.round(kwhTotal),
       totalItemHoursByCategory: totalItemTime,
-      itemMoreConsumedPercentage: Math.round(
-        (itemMoreConsumedKwh * 100) / kwhTotal
-      ),
+      itemMoreConsumedPercentage:
+        itemMoreConsumedKwh === 0 && kwhTotal === 0
+          ? 0
+          : Math.round((itemMoreConsumedKwh * 100) / kwhTotal),
       itemMoreConsumedName: itemMoreConsumedName,
     });
   }

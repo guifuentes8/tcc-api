@@ -8,6 +8,10 @@ const itemsController = new ItemsController();
 
 itemsRoutes.get("/", itemsController.allItem);
 itemsRoutes.get("/:id", itemsController.itemById);
+itemsRoutes.get(
+  "/allItemByCategory/:categoryId",
+  itemsController.allItemByCategory
+);
 itemsRoutes.get("/dashboard/:id", itemsController.dashboard);
 
 module.exports = itemsRoutes;

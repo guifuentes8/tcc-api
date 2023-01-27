@@ -10,10 +10,22 @@ class ItemController {
     return response.json(allItems);
   }
 
+  async allItemByCategory(request, response) {
+    const { categoryId } = request.params;
+
+    const allItems = await knex("items")
+      .select("items.*")
+      .orderBy("items.id", "asc")
+      .where("items.category_id", categoryId);
+
+    return response.json(allItems);
+  }
+
   async itemById(request, response) {
     const { id } = request.params;
 
     const item = await knex("items").where({ id }).first();
+    console.log(item);
 
     return response.json(item);
   }
