@@ -7,7 +7,7 @@ const itemsRoutes = Router();
 const itemsController = new ItemsController();
 
 itemsRoutes.get("/", itemsController.allItem);
-itemsRoutes.get("/:id", itemsController.itemById);
+itemsRoutes.get("/itemById/:id/:userId", itemsController.itemById);
 itemsRoutes.get(
   "/allItemByCategory/:categoryId",
   itemsController.allItemByCategory

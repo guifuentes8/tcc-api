@@ -22,17 +22,83 @@ class ItemController {
   }
 
   async itemById(request, response) {
-    const { id } = request.params;
+    const { id, userId } = request.params;
+    const item = await knex("items")
+      .select("items.*", "questions.*")
+      .leftJoin("questions", "items.id", "=", "questions.item_id")
+      .where("items.id", id)
+      .where("questions.user_id", userId);
 
-    const item = await knex("items").where({ id }).first();
-    console.log(item);
+    if (item.length === 0) {
+      return response.json({
+        total: 0,
+        valorEsperado: 0,
+        totalHours: 0,
+      });
+    }
 
-    return response.json(item);
+    const TE2022 = 0.27;
+    const TUSD2022 = 0.4;
+    let totalHours = 0;
+    let kwhTotal = 0;
+
+    item.forEach((element) => {
+      let hours = (element.minutes + element.hours * 60) / 60;
+      let days = element.dayByMonth || element.dayByWeek * 4;
+      if (element.all_day === 1) {
+        days = 30;
+        hours = 24;
+      }
+      let watts = element.default_watts;
+      let quantItem = element.quant_item;
+      let moradores = element.residents;
+      let flag = element.flag_residents;
+
+      if (quantItem <= 0) {
+        quantItem = 0;
+      } else {
+        if (moradores === 1 && quantItem >= 1) {
+          quantItem = moradores;
+        }
+        if (moradores > 1 && quantItem >= 1) {
+          if (flag === 1) {
+            if (quantItem === 1) {
+              quantItem = moradores * quantItem;
+            } else {
+              quantItem = moradores;
+            }
+          } else {
+            quantItem = quantItem;
+            if (quantItem > 1 && moradores > quantItem) {
+              quantItem = quantItem;
+            }
+            if (moradores <= quantItem) {
+              quantItem = moradores;
+            }
+          }
+        }
+      }
+      totalHours += quantItem * days * hours;
+      let kwhItemMonth = (quantItem * watts * days * hours) / 1000;
+
+      kwhTotal += parseFloat(kwhItemMonth.toFixed(2));
+    });
+
+    const imposto = kwhTotal * 0.2;
+    const gastoEsperado =
+      (kwhTotal + imposto) * TE2022 + (kwhTotal + imposto) * TUSD2022;
+
+    return response.json({
+      total: Math.round(kwhTotal),
+      valorEsperado: Number(gastoEsperado.toFixed(2)),
+      totalHours: totalHours,
+    });
   }
+
   async moreConsumed(request, response) {
     const { id } = request.params;
 
-    const item = await knex("items").where({ id }).first();
+    const item = await knex("items").select("items.*").where({ id }).first();
 
     return response.json(item);
   }

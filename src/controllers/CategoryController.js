@@ -30,7 +30,7 @@ class CategoryController {
     const { id, userId } = request.params;
 
     const categoryData = await knex("category")
-      .select("items.*")
+      .select("items.*", "category.name")
       .orderBy("id")
       .leftJoin("items", "category.id", "=", "items.category_id")
       .where("category.id", id);
