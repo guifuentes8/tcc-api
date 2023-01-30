@@ -39,11 +39,10 @@ class CategoryController {
 
     let itemMoreConsumedName = "";
     let itemMoreConsumedKwh = 0;
-    let kwhItemMonth = 0;
+    const TE2022 = 0.27;
+    const TUSD2022 = 0.4;
     let kwhTotal = 0;
     let totalItemTime = 0;
-
-    let itemName = "";
 
     const item = await knex("questions")
       .select(
@@ -57,10 +56,10 @@ class CategoryController {
         "users.residents",
         "users.energy_bill"
       )
-      .where({ user_id: userId })
-      .where("items.category_id", id)
       .leftJoin("items", "items.id", "=", "questions.item_id")
-      .leftJoin("users", "users.id", "=", "questions.user_id");
+      .leftJoin("users", "users.id", "=", "questions.user_id")
+      .where("items.category_id", id)
+      .where("questions.user_id", userId);
 
     item.forEach((element, index) => {
       let hours = (element.minutes + element.hours * 60) / 60;
@@ -72,6 +71,7 @@ class CategoryController {
       let watts = element.default_watts;
       let quantItem = element.quant_item;
       let moradores = element.residents;
+
       let flag = element.flag_residents;
 
       if (quantItem <= 0) {
@@ -107,17 +107,21 @@ class CategoryController {
         ((quantItem * watts * days * hours) / 1000).toFixed(2)
       );
 
-      if (item[index - 1]) {
-        itemMoreConsumedName = item[index - 1].item_name;
-        itemMoreConsumedKwh = item[index - 1].totalKwh;
-
-        if (item[index - 1].totalKwh <= item[index].totalKwh) {
+      if (element.totalKwh !== 0) {
+        /* itemMoreConsumedName = element.item_name;
+        itemMoreConsumedKwh = element.totalKwh; */
+        if (item.length === 1) {
+          itemMoreConsumedName = item[index].item_name;
           itemMoreConsumedKwh = item[index].totalKwh;
+          return;
+        }
+        if (itemMoreConsumedKwh >= item[index].totalKwh) {
+          itemMoreConsumedKwh = itemMoreConsumedKwh;
+          itemMoreConsumedName = itemMoreConsumedName;
+        } else {
+          itemMoreConsumedKwh = element.totalKwh;
           itemMoreConsumedName = element.item_name;
         }
-      } else {
-        itemMoreConsumedName = item[index].item_name;
-        itemMoreConsumedKwh = item[index].totalKwh ? item[index].totalKwh : 0;
       }
 
       itemsArr.push({
@@ -135,6 +139,9 @@ class CategoryController {
       itensOfCategory: itemsArr,
       totalItensKwhByCategory: Math.round(kwhTotal),
       totalItemHoursByCategory: totalItemTime,
+      totalItensPrice: Number(kwhTotal * TE2022 + kwhTotal * TUSD2022).toFixed(
+        2
+      ),
       itemMoreConsumedPercentage:
         itemMoreConsumedKwh === 0 && kwhTotal === 0
           ? 0

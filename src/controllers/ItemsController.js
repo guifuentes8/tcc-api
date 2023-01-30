@@ -24,8 +24,9 @@ class ItemController {
   async itemById(request, response) {
     const { id, userId } = request.params;
     const item = await knex("items")
-      .select("items.*", "questions.*")
+      .select("items.*", "questions.*", "users.*")
       .leftJoin("questions", "items.id", "=", "questions.item_id")
+      .leftJoin("users", "users.id", "=", "questions.user_id")
       .where("items.id", id)
       .where("questions.user_id", userId);
 
@@ -83,15 +84,15 @@ class ItemController {
 
       kwhTotal += parseFloat(kwhItemMonth.toFixed(2));
     });
-
     const imposto = kwhTotal * 0.2;
+
     const gastoEsperado =
       (kwhTotal + imposto) * TE2022 + (kwhTotal + imposto) * TUSD2022;
 
     return response.json({
       total: Math.round(kwhTotal),
       valorEsperado: Number(gastoEsperado.toFixed(2)),
-      totalHours: totalHours,
+      totalHours: Math.round(totalHours),
     });
   }
 
@@ -133,7 +134,7 @@ class ItemController {
         "users.residents",
         "users.energy_bill"
       )
-      .where({ user_id: id })
+      .where("questions.user_id", id)
       .leftJoin("items", "items.id", "=", "questions.item_id")
       .leftJoin("users", "users.id", "=", "questions.user_id");
 
@@ -178,7 +179,8 @@ class ItemController {
       lastEnergyPay = element.energy_bill || 172;
 
       totalHours += quantItem * days * hours;
-      baseCalculo = (comodos * wattsLampada * hoursLampada) / 1000;
+      baseCalculo =
+        ((comodos / moradores) * wattsLampada * hoursLampada * 30) / 1000;
       let kwhItemMonth = (quantItem * watts * days * hours) / 1000;
 
       kwhTotal += parseFloat(kwhItemMonth.toFixed(2));
@@ -211,13 +213,18 @@ class ItemController {
       return element;
     });
 
+    const impostoReverso = lastEnergyPay * 0.2;
+
     return response.json({
       total: Math.round(kwhTotal),
-      comparePercentage: Math.round(lastEnergyPay / (TE2022 + TUSD2022)),
+      comparePercentage: Math.round(
+        (lastEnergyPay - impostoReverso + baseCalculo) / (TE2022 + TUSD2022)
+      ),
       itemPhoto: photo,
       itemName: itemName,
       itemPercentageOfTotal: Math.round(itemPercentageOfTotal),
       economized: lastEnergyPay > Number(gastoEsperado.toFixed(2)),
+      isLight: kwhTotal === baseCalculo,
       valorEsperado: Number(gastoEsperado.toFixed(2)),
       valorUltimaConta: lastEnergyPay,
       itens: newItemsArr,
