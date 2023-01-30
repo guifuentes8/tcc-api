@@ -71,6 +71,7 @@ class QuestionsController {
     let baseCalculo = 0;
     let wattsLampada = 9;
     let hoursLampada = 6;
+    let avatarUser = "";
 
     let arrUser = [];
 
@@ -85,12 +86,14 @@ class QuestionsController {
         "users.comforts",
         "users.residents",
         "users.energy_bill",
-        "users.name"
+        "users.name",
+        "users.avatar"
       )
       .leftJoin("items", "items.id", "=", "questions.item_id")
       .leftJoin("users", "users.id", "=", "questions.user_id");
 
     users.forEach((user) => {
+      avatarUser = "";
       lastEnergyPay = 0;
       totalHours = 0;
       kwhTotal = 0;
@@ -142,6 +145,7 @@ class QuestionsController {
           let kwhItemMonth = (quantItem * watts * days * hours) / 1000;
 
           kwhTotal += parseFloat(kwhItemMonth.toFixed(2));
+          avatarUser = element.avatar;
         }
       });
 
@@ -160,6 +164,7 @@ class QuestionsController {
         economized: lastEnergyPay > Number(gastoEsperado.toFixed(2)),
         valorUltimaConta: lastEnergyPay,
         nome: user.name,
+        avatar: avatarUser,
       });
     });
 
